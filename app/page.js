@@ -1,5 +1,3 @@
-// app/page.js
-
 "use client";
 
 import { useState, useRef } from "react";
@@ -9,12 +7,7 @@ import JSZip from "jszip";
 import QRCodeSVG from "qrcode-svg";
 import { Canvg } from "canvg";
 
-// Pastikan Anda memuat library Canvg, PapaParse, JSZip, dan QRCodeSVG di lingkungan Anda.
-
-const DEFAULT_QR_SIZE = 250;
-
-// --- UTILITY: Fungsi untuk download gambar (PNG/JPG) ---
-// Memerlukan SVG string dan ukuran
+const DEFAULT_QR_SIZE = 350;
 const downloadAsImage = async (
   svgString,
   filename,
@@ -41,12 +34,10 @@ const downloadAsImage = async (
     document.body.removeChild(link);
   } catch (error) {
     console.error("Gagal mengkonversi SVG ke Canvas/Image:", error);
-    // Mengganti alert() dengan console.error
     console.error("Gagal mengkonversi gambar. Periksa konsol untuk detail.");
   }
 };
 
-// Komponen Select untuk Ukuran
 const SizeSelector = ({ qrSize, setQrSize }) => (
   <div className="mb-4">
     <label
@@ -87,11 +78,10 @@ export default function Home() {
 
   // --- LOGIC UNTUK GENERATOR TUNGGAL ---
   const handleGenerateSingle = () => {
-    // Kosongkan status massal saat beralih ke tunggal
     setBulkData([]);
     setIsFileLoaded(false);
     setFileError("");
-    setSelectedFileName(null); // Reset nama file
+    setSelectedFileName(null); 
     setSingleQrValue(singleText);
   };
 
@@ -218,7 +208,6 @@ export default function Home() {
         });
         const svgString = qrcodeSvg.svg();
 
-        // Konversi SVG ke Canvas/JPEG
         const v = await Canvg.from(ctx, svgString);
         await v.render();
 
@@ -268,7 +257,7 @@ export default function Home() {
       setLoading(false);
       setIsFileLoaded(false); // Reset status setelah selesai
       setSelectedFileName(null); // Reset nama file setelah download
-      if (fileInputRef.current) fileInputRef.current.value = null; // Kosongkan input file asli
+      if (fileInputRef.current) fileInputRef.current.value = null;
     }
   };
 
@@ -276,10 +265,10 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center bg-gray-50 p-8">
       <div className="w-full max-w-4xl rounded-xl bg-white p-8 shadow-2xl mt-10">
         <h1 className="mb-6 text-center text-3xl font-bold text-gray-800">
-          Super QR Code Generator
+          QR Generator CTR
         </h1>
 
-        {/* Kontainer utama menggunakan Flexbox dengan items-start untuk mencegah pergeseran vertikal */}
+        {}
         <div className="flex flex-col md:flex-row gap-8 items-start">
           {/* --- SECTION 1: GENERATOR TUNGGAL --- */}
           <div className="md:w-1/2 p-6 border border-gray-200 rounded-lg shadow-md flex-shrink-0 w-full">
@@ -379,7 +368,7 @@ export default function Home() {
                   className="p-2 text-red-500 hover:text-red-700 transition-colors rounded-full"
                   aria-label="Hapus file yang dipilih"
                 >
-                  {/* Ikon silang (X) */}
+                  {}
                   <svg
                     className="w-5 h-5"
                     fill="none"
@@ -398,7 +387,7 @@ export default function Home() {
               )}
             </div>
 
-            {/* Area Pesan */}
+            {}
             {fileError && (
               <p
                 className={`mt-3 text-sm font-medium ${
@@ -409,7 +398,7 @@ export default function Home() {
               </p>
             )}
 
-            {/* Tombol GENERATE DAN DOWNLOAD, hanya muncul jika file sudah dimuat */}
+            {}
             {isFileLoaded && (
               <div className="mt-6">
                 <button
