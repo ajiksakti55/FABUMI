@@ -42,3 +42,13 @@ next-env.d.ts
 
 firebase_admin_key.json
 
+# dependencies & build
+node_modules/
+.next/
+out/
+
+# environment & credentials
+.env.local
+*.json
+
+
