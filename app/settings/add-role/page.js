@@ -10,7 +10,8 @@ export default function AddRolePage() {
   const availableMenus = [
     { id: "dashboard", name: "Dashboard" }, 
     { id: "transaksi", name: "transaksi" },    
-    { id: "kategori", name: "kategori" },    
+    { id: "kategori", name: "kategori" }, 
+    { id: "budget", name: "budget" },    
     { id: "add-users", name: "Tambah User" },
     { id: "edit-users", name: "Edit User" },
     { id: "add-role", name: "Tambah Role" },

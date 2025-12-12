@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Line } from "react-chartjs-2";
+import {
+  Line, Pie, Bar
+} from "react-chartjs-2";
 import {
   Chart as ChartJS,
   LineElement,
@@ -10,7 +12,19 @@ import {
   PointElement,
   Legend,
   Tooltip,
+  ArcElement,
+  BarElement,
 } from "chart.js";
+
+import SummaryCards from "./components/SummaryCards";
+import CashflowChart from "./components/CashflowChart";
+import YearlyLineChart from "./components/YearlyLineChart";
+import CategoryPieChart from "./components/CategoryPieChart";
+import BudgetProgress from "./components/BudgetProgress";
+import Top5BarChart from "./components/Top5BarChart";
+import DailyExpenseChart from "./components/DailyExpenseChart";
+import TransactionTable from "./components/TransactionTable";
+import FilterSelect from "./components/FilterSelect";
 
 ChartJS.register(
   LineElement,
@@ -18,15 +32,31 @@ ChartJS.register(
   LinearScale,
   PointElement,
   Legend,
-  Tooltip
+  Tooltip,
+  ArcElement,
+  BarElement
 );
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [transaksi, setTransaksi] = useState([]);
+  const [filter, setFilter] = useState("bulan-ini");
+  const [totalIncomeAll, setTotalIncomeAll] = useState(0);
+  const [totalExpenseAll, setTotalExpenseAll] = useState(0);
+  const monthlyBudget = 5000000;
 
-  const [totalIncome, setTotalIncome] = useState(0);
-  const [totalExpense, setTotalExpense] = useState(0);
+  function isIncomeCategory(t) {
+    const txt = (
+      (t.categoryName || "") +
+      " " +
+      (t.categoryParent || "") +
+      " " +
+      (t.categoryParentName || "")
+    ).toLowerCase();
+    return ["gaji", "salary", "pendapatan", "income"].some((w) =>
+      txt.includes(w)
+    );
+  }
 
   useEffect(() => {
     load();
@@ -36,35 +66,15 @@ export default function DashboardPage() {
     try {
       const res = await fetch("/api/transaksi");
       const json = await res.json();
-
-      if (!json.ok) throw new Error("Gagal mengambil data transaksi");
+      if (!json.ok) throw new Error("Gagal mengambil transaksi");
 
       let data = json.data || [];
-
-      // ===========================
-      // NORMALISASI TANGGAL FIX
-      // ===========================
       data = data.map((t) => ({
         ...t,
         date: normalizeDate(t.date),
         createdAt: normalizeDate(t.createdAt),
       }));
-
       setTransaksi(data);
-
-      // ===========================
-      // HITUNG SUMMARY
-      // ===========================
-      let income = 0;
-      let expense = 0;
-
-      data.forEach((t) => {
-        if (t.type === "income") income += Number(t.amount);
-        else if (t.type === "expense") expense += Number(t.amount);
-      });
-
-      setTotalIncome(income);
-      setTotalExpense(expense);
     } catch (err) {
       console.error(err);
     } finally {
@@ -72,36 +82,16 @@ export default function DashboardPage() {
     }
   }
 
-  // ===============================
-  // FIX ALL FORMAT TANGGAL
-  // ===============================
   function normalizeDate(val) {
     if (!val) return null;
-
-    // Firestore Timestamp (admin)
-    if (typeof val === "object" && val._seconds) {
-      return new Date(val._seconds * 1000);
-    }
-
-    // Firestore client Timestamp
-    if (val.toDate) {
-      return val.toDate();
-    }
-
-    // Number timestamp
-    if (typeof val === "number") {
-      return new Date(val);
-    }
-
-    // String (ISO)
+    if (typeof val === "object" && val._seconds) return new Date(val._seconds * 1000);
+    if (val && typeof val.toDate === "function") return val.toDate();
+    if (typeof val === "number") return new Date(val);
     if (typeof val === "string") {
       const d = new Date(val);
       return isNaN(d.getTime()) ? null : d;
     }
-
-    // Sudah Date
     if (val instanceof Date) return val;
-
     return null;
   }
 
@@ -111,115 +101,83 @@ export default function DashboardPage() {
     return val.toLocaleDateString("id-ID");
   }
 
-  // ===============================
-  // GRAFIK BULANAN
-  // ===============================
-  const monthlyIncome = {};
-  const monthlyExpense = {};
+  // === Filter Date Logic ===
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear = now.getFullYear();
+  const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+  const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
 
-  transaksi.forEach((t) => {
-    if (!t.date) return;
-
+  const filtered = transaksi.filter((t) => {
+    if (!t || !t.date) return false;
     const d = t.date;
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-
-    if (!monthlyIncome[key]) monthlyIncome[key] = 0;
-    if (!monthlyExpense[key]) monthlyExpense[key] = 0;
-
-    if (t.type === "income") monthlyIncome[key] += Number(t.amount);
-    else if (t.type === "expense") monthlyExpense[key] += Number(t.amount);
+    if (filter === "bulan-ini")
+      return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+    if (filter === "bulan-lalu")
+      return d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear;
+    return true;
   });
 
-  const bulanLabels = Object.keys(monthlyIncome).sort();
+  useEffect(() => {
+    let inc = 0;
+    let exp = 0;
+    transaksi.forEach((t) => {
+      const amt = Number(t.amount || 0);
+      if (isNaN(amt) || amt <= 0) return;
+      if (t.type === "income") inc += amt;
+      if (t.type === "expense") exp += amt;
+    });
+    setTotalIncomeAll(inc);
+    setTotalExpenseAll(exp);
+  }, [transaksi]);
 
-  const chartData = {
-    labels: bulanLabels,
-    datasets: [
-      {
-        label: "Pemasukan",
-        data: bulanLabels.map((b) => monthlyIncome[b] || 0),
-        borderColor: "green",
-        borderWidth: 2,
-      },
-      {
-        label: "Pengeluaran",
-        data: bulanLabels.map((b) => monthlyExpense[b] || 0),
-        borderColor: "red",
-        borderWidth: 2,
-      },
-    ],
-  };
+  // === Hitung semua data turunan ===
+  let totalIncomeFiltered = 0;
+  let totalExpenseFiltered = 0;
+  let categoryExpenseFiltered = {};
+
+  filtered.forEach((t) => {
+    const amt = Number(t.amount || 0);
+    if (isNaN(amt) || amt <= 0) return;
+    if (t.type === "income") totalIncomeFiltered += amt;
+    else if (t.type === "expense") {
+      totalExpenseFiltered += amt;
+      if (!isIncomeCategory(t)) {
+        const cat =
+          t.categoryParent || t.categoryParentName || t.categoryName || "Lainnya";
+        if (!categoryExpenseFiltered[cat]) categoryExpenseFiltered[cat] = 0;
+        categoryExpenseFiltered[cat] += amt;
+      }
+    }
+  });
+
+  const balance = totalIncomeAll - totalExpenseAll;
+  const budgetPercent = Math.min(
+    Math.round((totalExpenseFiltered / monthlyBudget) * 100),
+    100
+  );
 
   if (loading) return <p>Loading...</p>;
 
-  const balance = totalIncome - totalExpense;
-
   return (
-    <div className="p-6 text-gray-800">
-      <h1 className="text-2xl font-semibold mb-6">Dashboard</h1>
-
-      {/* SUMMARY */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-        <div className="p-4 bg-white shadow rounded">
-          <p className="text-gray-600 text-sm">Total Pemasukan</p>
-          <p className="text-xl font-bold text-green-600">
-            {totalIncome.toLocaleString("id-ID")}
-          </p>
-        </div>
-
-        <div className="p-4 bg-white shadow rounded">
-          <p className="text-gray-600 text-sm">Total Pengeluaran</p>
-          <p className="text-xl font-bold text-red-600">
-            {totalExpense.toLocaleString("id-ID")}
-          </p>
-        </div>
-
-        <div className="p-4 bg-white shadow rounded">
-          <p className="text-gray-600 text-sm">Sisa Saldo</p>
-          <p
-            className={`text-xl font-bold ${
-              balance >= 0 ? "text-blue-600" : "text-red-600"
-            }`}
-          >
-            {balance.toLocaleString("id-ID")}
-          </p>
-        </div>
+    <div className="p-6 text-gray-800 space-y-6">
+      <FilterSelect filter={filter} setFilter={setFilter} />
+      <SummaryCards
+        totalIncomeFiltered={totalIncomeFiltered}
+        totalExpenseFiltered={totalExpenseFiltered}
+        balance={balance}
+      />
+      <CashflowChart filtered={filtered} formatDate={formatDate} />
+      <YearlyLineChart transaksi={transaksi} thisYear={thisYear} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <CategoryPieChart categoryExpenseFiltered={categoryExpenseFiltered} />
+        <BudgetProgress transaksi={filtered} />
       </div>
-
-      {/* GRAFIK */}
-      <div className="bg-white p-6 rounded shadow mb-10">
-        <h2 className="text-lg font-semibold mb-4">Grafik pemasukan vs pengeluaran</h2>
-        <Line data={chartData} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Top5BarChart filtered={filtered} formatDate={formatDate} isIncomeCategory={isIncomeCategory} />
+        <DailyExpenseChart filtered={filtered} isIncomeCategory={isIncomeCategory} formatDate={formatDate} />
       </div>
-
-      {/* TRANSAKSI TERBARU */}
-      <div className="bg-white p-6 rounded shadow">
-        <h2 className="text-lg font-semibold mb-4">Transaksi Terbaru</h2>
-
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b">
-              <th className="py-2 text-left">Tanggal</th>
-              <th className="py-2 text-left">Kategori</th>
-              <th className="py-2 text-left">Tipe</th>
-              <th className="py-2 text-right">Nominal</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {transaksi.slice(0, 5).map((t) => (
-              <tr key={t.id} className="border-b">
-                <td className="py-2">{formatDate(t.date)}</td>
-                <td className="py-2">{t.categoryName}</td>
-                <td className="py-2 capitalize">{t.type}</td>
-                <td className="py-2 text-right">
-                  {Number(t.amount).toLocaleString("id-ID")}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <TransactionTable filtered={filtered} formatDate={formatDate} />
     </div>
   );
 }

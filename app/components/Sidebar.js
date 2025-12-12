@@ -66,6 +66,13 @@ export default function Sidebar({ onToggle }) {
     },
 
     {
+      id: "budget",
+      name: "budget",
+      path: "/budget",
+      icon: <BarChart3 size={20} />,
+    },
+
+    {
       id: "settings",
       name: "Settings",
       icon: <Settings size={20} />,

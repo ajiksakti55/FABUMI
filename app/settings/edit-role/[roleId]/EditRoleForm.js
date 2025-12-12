@@ -9,7 +9,8 @@ export default function EditRoleForm({ params }) {
   const [accessList] = useState([
     "dashboard",
     "transaksi",   
-    "kategori",   
+    "kategori",     
+    "budget",
     "add-users",
     "edit-users",
     "add-role",

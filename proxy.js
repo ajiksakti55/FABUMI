@@ -28,14 +28,14 @@ export default async function middleware(req) {
     const access = roleDoc.data()?.access || [];
 
     const routeAccessMap = {
-      "/transaksi": "transaksi",   
-      "/kategori": "kategori",     
+      "/budget": "budget",         
       "/settings/add-users": "add-users",
       "/settings/edit-users": "edit-users",
       "/settings/add-role": "add-role",
       "/settings/edit-role": "edit-role",
-      "/dashboard": "dashboard",
-      "/kategori": "kategori",   
+      "/dashboard": "dashboard",     
+      "/transaksi": "transaksi",   
+      "/kategori": "kategori",  
     };
 
     // Cari access yang terkait dengan path
@@ -59,7 +59,7 @@ export const config = {
     "/transaksi/:path*", 
     "/kategori/:path*",   
     "/settings/:path*",
-    "/qr/:path*",
+    "/budget/:path*",    
     "/dashboard/:path*",
   ],
 };

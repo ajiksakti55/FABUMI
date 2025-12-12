@@ -1,4 +1,3 @@
-// app/transaksi/page.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -11,6 +10,7 @@ export default function TransaksiPage() {
   const [editing, setEditing] = useState(null);
   const [filterMonth, setFilterMonth] = useState(""); // YYYY-MM
 
+  // Load transaksi
   async function load(month = "") {
     setLoading(true);
     try {
@@ -32,36 +32,37 @@ export default function TransaksiPage() {
   }, [filterMonth]);
 
   return (
-    <div className="p-6 text-gray-800">
-      <h1 className="text-xl font-semibold mb-4">Transaksi</h1>
+    <div className="p-6 text-gray-800 space-y-6">
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          💼 Transaksi
+        </h1>        
+      </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="md:col-span-1 bg-white p-4 rounded shadow">
-          <TransactionForm
-            editing={editing}
-            onSaved={() => {
-              setEditing(null);
-              load(filterMonth);
-            }}
-            onCancel={() => setEditing(null)}
+      {/* FORM */}
+      <div className="">
+        <TransactionForm
+          editing={editing}
+          onSaved={() => {
+            setEditing(null);
+            load(filterMonth);
+          }}
+          onCancel={() => setEditing(null)}
+        />
+      </div>
+
+      {/* LIST */}
+      <div className="bg-white/80 rounded-xl shadow-md p-5 border border-gray-100">
+        {loading ? (
+          <div className="flex justify-center py-8 text-gray-500">Loading...</div>
+        ) : (
+          <TransactionList
+            transaksi={transaksi}
+            onEdit={(t) => setEditing(t)}
+            onDeleted={() => load(filterMonth)}
           />
-        </div>
-
-        <div className="md:col-span-2 bg-white p-4 rounded shadow">
-          <div className="flex items-center justify-between mb-4">
-            
-          </div>
-
-          {loading ? (
-            <p>Loading...</p>
-          ) : (
-            <TransactionList
-              transaksi={transaksi}
-              onEdit={(t) => setEditing(t)}
-              onDeleted={() => load(filterMonth)}
-            />
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
