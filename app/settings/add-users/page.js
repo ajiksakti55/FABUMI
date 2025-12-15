@@ -22,12 +22,10 @@ export default function AddUserPage() {
   // ============================================================
   useEffect(() => {
     if (!currentUser) return;
-
     if (!access.includes("add-users")) {
       router.push("/");
     }
-  }, [access, currentUser]);
-
+  }, [access, currentUser, router]); // ✅ tambahkan router
   // ============================================================
   // 🔥 FETCH ROLE
   // ============================================================

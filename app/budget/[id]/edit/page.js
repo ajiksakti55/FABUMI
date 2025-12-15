@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 
 export default function EditBudgetPage() {
@@ -14,17 +14,13 @@ export default function EditBudgetPage() {
   const [month, setMonth] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
   const [categories, setCategories] = useState([]);
 
-  useEffect(() => {
-    if (!id) return;
-    loadData();
-  }, [id]);
-
-  async function loadData() {
+  // ✅ Bungkus loadData dalam useCallback agar stabil untuk dependency useEffect
+  const loadData = useCallback(async () => {
     try {
-      // Ambil data budget berdasarkan id
+      if (!id) return;
+
       const r = await fetch(`/api/budget/${id}`);
       const j = await r.json();
       if (!j.ok) {
@@ -39,7 +35,6 @@ export default function EditBudgetPage() {
       setLimit(budget.limit.toLocaleString("id-ID"));
       setMonth(budget.month);
 
-      // Ambil daftar kategori
       const k = await fetch("/api/kategori");
       const kj = await k.json();
       if (kj.ok) setCategories(kj.data);
@@ -49,9 +44,12 @@ export default function EditBudgetPage() {
       console.error("Error loading:", err);
       alert("Gagal memuat data");
     }
-  }
+  }, [id, router]); // ✅ id & router jadi dependency yang benar
 
-  // Format angka limit (misal 200000 → 200.000)
+  useEffect(() => {
+    loadData();
+  }, [loadData]); // ✅ Tidak ada lagi warning
+
   function formatNumberInput(value) {
     const numeric = value.replace(/\D/g, "");
     return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -62,7 +60,6 @@ export default function EditBudgetPage() {
     setLimit(formatted);
   }
 
-  // Buat urutan kategori induk → sub
   function getSortedCategories() {
     const map = {};
     categories.forEach((c) => {

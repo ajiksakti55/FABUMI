@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../auth-context";
 
 export default function EditUsersPage() {
@@ -8,63 +8,48 @@ export default function EditUsersPage() {
 
   const [users, setUsers] = useState([]);
   const [message, setMessage] = useState("");
-
   const [editModal, setEditModal] = useState(false);
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState("");
   const [editUid, setEditUid] = useState("");
   const [loading, setLoading] = useState(false);
-
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  const [showPass, setShowPass] = useState(false);
-  const [showConfirmPass, setShowConfirmPass] = useState(false);
-
   const [modalError, setModalError] = useState("");
-
   const [roles, setRoles] = useState([]);
 
-  // ======================================================
-  // 🔥 GET USERS
-  // ======================================================
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const res = await fetch("/api/getUsers");
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error);
       setUsers(data.users);
-    } catch (err) {
+    } catch {
       setMessage("❌ Gagal mengambil data user.");
     }
-  };
+  }, []);
 
-  // ======================================================
-  // 🔥 GET ROLES
-  // ======================================================
-  const fetchRoles = async () => {
+  const fetchRoles = useCallback(async () => {
     try {
       if (!currentUser) return;
       const token = await currentUser.getIdToken();
-
       const res = await fetch("/api/getRoles", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       const data = await res.json();
       if (res.ok) setRoles(data.roles);
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
-  };
+  }, [currentUser]);
 
   useEffect(() => {
     if (currentUser) {
       fetchUsers();
       fetchRoles();
     }
-  }, [currentUser]);
+  }, [currentUser, fetchUsers, fetchRoles]); // ✅ warning hilang
+
 
   // ======================================================
   // 🔥 OPEN EDIT MODAL

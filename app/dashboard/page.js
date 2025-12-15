@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Line, Pie, Bar
 } from "react-chartjs-2";
@@ -58,11 +58,7 @@ export default function DashboardPage() {
     );
   }
 
-  useEffect(() => {
-    load();
-  }, []);
-
-  async function load() {
+  const load = useCallback(async () => {
     try {
       const res = await fetch("/api/transaksi");
       const json = await res.json();
@@ -80,7 +76,11 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []); // ✅ useCallback supaya stabil
+
+  useEffect(() => {
+    load();
+  }, [load]); // ✅ Tidak ada warning lagi
 
   function normalizeDate(val) {
     if (!val) return null;
@@ -101,7 +101,6 @@ export default function DashboardPage() {
     return val.toLocaleDateString("id-ID");
   }
 
-  // === Filter Date Logic ===
   const now = new Date();
   const thisMonth = now.getMonth();
   const thisYear = now.getFullYear();
@@ -131,7 +130,6 @@ export default function DashboardPage() {
     setTotalExpenseAll(exp);
   }, [transaksi]);
 
-  // === Hitung semua data turunan ===
   let totalIncomeFiltered = 0;
   let totalExpenseFiltered = 0;
   let categoryExpenseFiltered = {};
@@ -174,8 +172,16 @@ export default function DashboardPage() {
         <BudgetProgress transaksi={filtered} />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Top5BarChart filtered={filtered} formatDate={formatDate} isIncomeCategory={isIncomeCategory} />
-        <DailyExpenseChart filtered={filtered} isIncomeCategory={isIncomeCategory} formatDate={formatDate} />
+        <Top5BarChart
+          filtered={filtered}
+          formatDate={formatDate}
+          isIncomeCategory={isIncomeCategory}
+        />
+        <DailyExpenseChart
+          filtered={filtered}
+          isIncomeCategory={isIncomeCategory}
+          formatDate={formatDate}
+        />
       </div>
       <TransactionTable filtered={filtered} formatDate={formatDate} />
     </div>
