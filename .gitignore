@@ -1,8 +1,29 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ==============================================
+# 🔒 SECURITY: Jangan upload file rahasia ke GitHub
+# ==============================================
+.env
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
 
-# dependencies
-/node_modules
-/.pnp
+# Firebase credentials
+firebase_admin_key.json
+serviceAccount*.json
+*.firebase.json
+*firebase-adminsdk*.json
+
+# Ignore all .json secrets, tapi tetap simpan config penting
+*.json
+!package.json
+!tsconfig.json
+!next.config.js
+
+# ==============================================
+# 📦 DEPENDENCIES & BUILD OUTPUT
+# ==============================================
+node_modules/
+.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -10,45 +31,30 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# Next.js build
+.next/
+out/
+build/
 
-# next.js
-/.next/
-/out/
+# Vercel
+.vercel/
 
-# production
-/build
+# Coverage testing
+coverage/
 
-# misc
+# ==============================================
+# 🧹 MISC FILES
+# ==============================================
 .DS_Store
 *.pem
-
-# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
 next-env.d.ts
+*.tsbuildinfo
 
-firebase_admin_key.json
-
-# dependencies & build
-node_modules/
-.next/
-out/
-
-# environment & credentials
-.env.local
-*.json
-
-
+# ==============================================
+# 🧠 CUSTOM IGNORE
+# ==============================================
+# Tambahkan file pribadi lain di bawah sini
