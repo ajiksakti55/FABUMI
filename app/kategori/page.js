@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import KategoriForm from "../kategori/components/KategoriForm";
 import KategoriList from "../kategori/components/KategoriList";
 
-export default function kategoriPage() {
-  const [kategori, setkategori] = useState([]);
+export default function KategoriPage() {
+  const [kategori, setKategori] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
 
@@ -15,12 +15,12 @@ export default function kategoriPage() {
       const res = await fetch("/api/kategori", { cache: "no-store" });
       const json = await res.json();
       if (json.ok) {
-        setkategori(json.data || []);
+        setKategori(json.data || []);
       } else {
         console.error(json.error);
       }
     } catch (err) {
-      console.error("Failed to load kategori", err);
+      console.error("Failed to load kategori:", err);
     } finally {
       setLoading(false);
     }
@@ -31,11 +31,12 @@ export default function kategoriPage() {
   }, []);
 
   return (
-    <div className="p-6">
-      <h1 className="text-xl font-semibold mb-4 text-gray-800">Manage Kategori</h1>
+    <div className="p-6 text-gray-800">
+      <h1 className="text-2xl font-semibold mb-6">🗂️ Kelola Kategori</h1>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white p-4 rounded shadow">
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Form tambah/edit kategori */}
+        <div className="bg-white/80 backdrop-blur-sm shadow-md rounded-xl p-5 flex-1 border border-gray-100">
           <KategoriForm
             kategori={kategori}
             onSaved={() => {
@@ -47,10 +48,11 @@ export default function kategoriPage() {
           />
         </div>
 
-        <div className="bg-white p-4 rounded shadow text-gray-800">
-          <h2 className="font-medium mb-3">Daftar Kategori</h2>
+        {/* Daftar kategori */}
+        <div className="bg-white/80 backdrop-blur-sm shadow-md rounded-xl p-5 flex-1 border border-gray-100">
+          <h2 className="font-medium mb-3 text-lg">📋 Daftar Kategori</h2>
           {loading ? (
-            <p>Loading...</p>
+            <p className="text-gray-500 italic">Memuat data...</p>
           ) : (
             <KategoriList
               kategori={kategori}
