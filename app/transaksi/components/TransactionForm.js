@@ -195,7 +195,7 @@ export default function TransactionForm({
             <option
               key={c.id}
               value={c.id}
-              className={c.isSub ? "pl-6 text-gray-500 italic" : "font-semibold"}
+              className={c.isSub ? "pl-6 text-gray-700" : "font-semibold"}
             >
               {c.isSub ? `↳ ${c.name}` : c.name} ({c.type})
             </option>

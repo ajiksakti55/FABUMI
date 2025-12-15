@@ -33,12 +33,12 @@ export async function middleware(req) {
       "/dashboard": "dashboard",
       "/transaksi": "transaksi",
       "/kategori": "kategori",
-      "/budget": "budget",
-      "/settings": "settings",
+      "/budget": "budget",    
       "/settings/add-users": "add-users",
-      "/settings/edit-users": "edit-users",
+      "/settings/edit-user": "edit-users",
       "/settings/add-role": "add-role",
       "/settings/edit-role": "edit-role",
+      "/settings": "settings",
     };
 
     const requiredAccess = Object.entries(routeAccessMap).find(([path]) =>
