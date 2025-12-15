@@ -17,21 +17,18 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (!auth) {
-      console.error("Firebase Auth not initialized. Check firebase_setup.js");
-
-      // ✅ Perubahan penting: tunda setState agar tidak dianggap sinkron oleh React
       Promise.resolve().then(() => {
         setConfigError(true);
         setLoadingUser(false);
         setLoadingAccess(false);
       });
-
       return;
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setLoadingUser(false);
 
+      // Tidak ada user → hapus cookie dan reset state
       if (!user) {
         document.cookie = "firebaseToken=; Max-Age=0; path=/";
         setCurrentUser(null);
@@ -41,13 +38,21 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      setCurrentUser(user);
-
-      const token = await user.getIdToken();
-      document.cookie = `firebaseToken=${token}; path=/; max-age=3600;`;
-
-      setLoadingAccess(true);
+      // Ada user → update cookie dan ambil role
       try {
+        const token = await user.getIdToken();
+
+        const isLocal = window.location.hostname === "localhost";
+        const cookieStr = isLocal
+          ? `firebaseToken=${token}; path=/; max-age=3600; SameSite=Lax`
+          : `firebaseToken=${token}; path=/; max-age=3600; SameSite=None; Secure`;
+
+        document.cookie = cookieStr;
+
+        setCurrentUser(user);
+        setLoadingAccess(true);
+
+        // Ambil role dari API
         const res = await fetch("/api/role", {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },
@@ -58,23 +63,21 @@ export const AuthProvider = ({ children }) => {
           setRole(data.role || null);
           setAccess(data.access || []);
         } else {
-          console.warn("API role tidak OK:", res.status);
           setRole(null);
           setAccess([]);
         }
-      } catch (err) {
-        console.error("Gagal mengambil role:", err);
+      } catch {
         setRole(null);
         setAccess([]);
+      } finally {
+        setLoadingAccess(false);
       }
-
-      setLoadingAccess(false);
     });
 
     return () => unsubscribe();
-  }, []); // ✅ tidak perlu ubah dependency
+  }, []);
 
-  // LOGOUT
+  // Logout
   const logout = async () => {
     await signOut(auth);
     document.cookie = "firebaseToken=; Max-Age=0; path=/";
@@ -96,22 +99,18 @@ export const AuthProvider = ({ children }) => {
 
   if (loadingUser) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-pulse text-gray-300 text-lg">
-          Loading . . .
-        </div>
+      <div className="min-h-screen bg-black flex items-center justify-center text-gray-300">
+        <div>Loading...</div>
       </div>
     );
   }
 
   if (configError) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-xl font-semibold text-red-500 p-8 bg-black rounded-xl text-center">
-          🚨 <strong>FATAL ERROR KONFIGURASI</strong> 🚨
-          <p className="text-sm mt-3 text-red-400">
-            Periksa file <code>firebase_setup.js</code>
-          </p>
+      <div className="min-h-screen bg-black flex items-center justify-center text-red-400">
+        <div className="text-center">
+          <p>🚨 <strong>FATAL ERROR KONFIGURASI</strong></p>
+          <p className="mt-2 text-sm">Periksa file <code>firebase_setup.js</code></p>
         </div>
       </div>
     );
@@ -119,8 +118,8 @@ export const AuthProvider = ({ children }) => {
 
   if (!currentUser && loadingAccess) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-pulse text-gray-300 text-lg">Loading . . .</div>
+      <div className="min-h-screen bg-black flex items-center justify-center text-gray-300">
+        <div>Loading...</div>
       </div>
     );
   }
