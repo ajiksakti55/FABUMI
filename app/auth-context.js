@@ -18,9 +18,14 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (!auth) {
       console.error("Firebase Auth not initialized. Check firebase_setup.js");
-      setConfigError(true);
-      setLoadingUser(false);
-      setLoadingAccess(false);
+
+      // ✅ Perubahan penting: tunda setState agar tidak dianggap sinkron oleh React
+      Promise.resolve().then(() => {
+        setConfigError(true);
+        setLoadingUser(false);
+        setLoadingAccess(false);
+      });
+
       return;
     }
 
@@ -45,9 +50,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const res = await fetch("/api/role", {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         if (res.ok) {
@@ -69,7 +72,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, []); // ✅ tidak perlu ubah dependency
 
   // LOGOUT
   const logout = async () => {
