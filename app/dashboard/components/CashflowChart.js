@@ -60,8 +60,8 @@ export default function CashflowChart({ filtered, formatDate }) {
         tension: 0.35,
         fill: true,
         borderWidth: 3,
-        pointRadius: 4,
-        pointHoverRadius: 6,
+        pointRadius: 3,
+        pointHoverRadius: 5,
         pointBackgroundColor: "#4f46e5",
         pointHoverBackgroundColor: "#3b82f6",
       },
@@ -70,6 +70,7 @@ export default function CashflowChart({ filtered, formatDate }) {
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false, // ✅ penting untuk responsif
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -88,12 +89,17 @@ export default function CashflowChart({ filtered, formatDate }) {
     scales: {
       x: {
         grid: { display: false },
-        ticks: { color: "#64748b", font: { size: 11 } },
+        ticks: {
+          color: "#64748b",
+          font: { size: 10 },
+          maxRotation: 45,
+          minRotation: 30,
+        },
       },
       y: {
         ticks: {
           color: "#64748b",
-          font: { size: 11 },
+          font: { size: 10 },
           callback: (v) => "Rp " + v.toLocaleString("id-ID"),
         },
         grid: { color: "rgba(203,213,225,0.2)" },
@@ -102,19 +108,18 @@ export default function CashflowChart({ filtered, formatDate }) {
     interaction: { mode: "index", intersect: false },
   };
 
-  // ✅ FIX: hitung tren berdasarkan perubahan total cashflow
   const firstValue = cashflowValues[0] || 0;
   const lastValue = cashflowValues[cashflowValues.length - 1] || 0;
   const trendUp = lastValue > firstValue;
 
   return (
-    <div className="bg-white/80 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-500 hover:shadow-xl">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+    <div className="bg-white/80 backdrop-blur-md p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-500 hover:shadow-xl">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 flex items-center gap-2">
           💹 Cashflow
         </h2>
         <div
-          className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full ${
+          className={`flex items-center gap-2 text-xs sm:text-sm font-medium px-3 py-1.5 rounded-full ${
             trendUp
               ? "bg-green-50 text-green-700 border border-green-200"
               : "bg-red-50 text-red-700 border border-red-200"
@@ -133,9 +138,14 @@ export default function CashflowChart({ filtered, formatDate }) {
       </div>
 
       {cashflowValues.length === 0 ? (
-        <p className="text-center text-gray-500 italic py-6">Belum ada data cashflow</p>
+        <p className="text-center text-gray-500 italic py-6 text-sm sm:text-base">
+          Belum ada data cashflow
+        </p>
       ) : (
-        <Line data={data} options={options} height={100} />
+        <div className="h-[220px] sm:h-[300px] md:h-[360px]">
+          {/* ✅ tinggi chart menyesuaikan device */}
+          <Line data={data} options={options} />
+        </div>
       )}
     </div>
   );

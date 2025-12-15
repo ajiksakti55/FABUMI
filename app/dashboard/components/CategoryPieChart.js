@@ -37,14 +37,15 @@ export default function CategoryPieChart({ categoryExpenseFiltered }) {
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false, // ✅ biar chart fleksibel di layar kecil
     plugins: {
       legend: {
         position: "bottom",
         labels: {
           color: "#475569",
-          font: { size: 13, weight: "500" },
+          font: { size: 11, weight: "500" }, // 🔹 font lebih kecil di HP
           usePointStyle: true,
-          padding: 20,
+          padding: 10,
         },
       },
       tooltip: {
@@ -69,18 +70,24 @@ export default function CategoryPieChart({ categoryExpenseFiltered }) {
   const total = values.reduce((a, b) => a + b, 0);
 
   return (
-    <div className="bg-white/80 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-500">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+    <div className="bg-white/80 backdrop-blur-md p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-500">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 flex items-center gap-2">
           <Wallet className="w-5 h-5 text-indigo-500" /> Pengeluaran per Kategori
         </h2>
-        <span className="text-sm text-gray-500">Total: Rp {total.toLocaleString("id-ID")}</span>
+        <span className="text-xs sm:text-sm text-gray-500">
+          Total: Rp {total.toLocaleString("id-ID")}
+        </span>
       </div>
 
+      {/* Chart */}
       {values.length === 0 ? (
-        <p className="text-center text-gray-500 italic py-6">Belum ada data pengeluaran</p>
+        <p className="text-center text-gray-500 italic py-6 text-sm sm:text-base">
+          Belum ada data pengeluaran
+        </p>
       ) : (
-        <div className="relative mx-auto max-w-[350px]">
+        <div className="relative mx-auto w-full max-w-[280px] sm:max-w-[340px] md:max-w-[400px] h-[220px] sm:h-[280px] md:h-[320px]">
           <Pie data={data} options={options} />
         </div>
       )}

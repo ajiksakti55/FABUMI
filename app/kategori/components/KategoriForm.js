@@ -40,24 +40,17 @@ export default function KategoriForm({
     try {
       const payload = { name: name.trim(), type, parentId };
 
-      if (editing) {
-        payload.id = editing.id;
-        const res = await fetch("/api/kategori", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const json = await res.json();
-        if (!json.ok) throw new Error(json.error || "Gagal update kategori");
-      } else {
-        const res = await fetch("/api/kategori", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const json = await res.json();
-        if (!json.ok) throw new Error(json.error || "Gagal menambah kategori");
-      }
+      const method = editing ? "PUT" : "POST";
+      const body = editing ? { ...payload, id: editing.id } : payload;
+
+      const res = await fetch("/api/kategori", {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || "Gagal menyimpan kategori");
 
       onSaved();
       setName("");
@@ -75,9 +68,9 @@ export default function KategoriForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-md bg-white/70 backdrop-blur-md shadow-lg rounded-2xl p-6 border border-gray-100 transition-all duration-300 hover:shadow-xl"
+      className="w-full max-w-md mx-auto bg-white/80 backdrop-blur-md shadow-lg rounded-2xl p-4 sm:p-6 border border-gray-100 transition-all hover:shadow-xl text-gray-800"
     >
-      <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">
+      <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 text-center">
         {editing ? "✏️ Edit Kategori" : "➕ Tambah Kategori"}
       </h3>
 
@@ -88,12 +81,12 @@ export default function KategoriForm({
       )}
 
       {/* Nama */}
-      <div className="mb-4">
+      <div className="mb-3">
         <label className="block text-sm font-semibold text-gray-700 mb-1">
           Nama Kategori
         </label>
         <input
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all text-gray-700"
+          className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none transition-all text-sm sm:text-base"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Masukkan kategori atau subkategori"
@@ -102,12 +95,12 @@ export default function KategoriForm({
       </div>
 
       {/* Tipe */}
-      <div className="mb-4">
+      <div className="mb-3">
         <label className="block text-sm font-semibold text-gray-700 mb-1">
           Jenis Kategori
         </label>
         <select
-          className="w-full p-3 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all bg-white text-gray-700"
+          className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none bg-white text-sm sm:text-base"
           value={type}
           onChange={(e) => setType(e.target.value)}
         >
@@ -117,12 +110,12 @@ export default function KategoriForm({
       </div>
 
       {/* Parent */}
-      <div className="mb-4 text-gray-700">
+      <div className="mb-4">
         <label className="block text-sm font-semibold text-gray-700 mb-1">
           Parent (opsional)
         </label>
         <select
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all bg-white"
+          className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none bg-white text-sm sm:text-base"
           value={parentId || ""}
           onChange={(e) => setParentId(e.target.value || null)}
         >
@@ -139,13 +132,13 @@ export default function KategoriForm({
       </div>
 
       {/* Tombol */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between gap-3 mt-5">
         {editing && (
           <button
             type="button"
             onClick={onCancel}
             disabled={saving}
-            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-all duration-300"
+            className="w-full sm:w-auto px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100 transition-all duration-300 text-sm sm:text-base"
           >
             Batal
           </button>
@@ -154,7 +147,7 @@ export default function KategoriForm({
         <button
           type="submit"
           disabled={saving}
-          className={`ml-auto px-5 py-2.5 rounded-lg text-white font-medium shadow-md transition-all duration-300 ${
+          className={`w-full sm:w-auto px-5 py-2.5 rounded-lg text-white font-medium shadow-md transition-all duration-300 text-sm sm:text-base ${
             saving
               ? "bg-gray-400 cursor-not-allowed"
               : "bg-gradient-to-r from-blue-500 to-indigo-600 hover:scale-105 hover:shadow-lg"

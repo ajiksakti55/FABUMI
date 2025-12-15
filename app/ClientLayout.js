@@ -41,8 +41,8 @@ function LayoutContent({ children }) {
       <main
         className={`flex-1 overflow-y-auto overflow-x-hidden bg-white transition-all duration-300 ${
           isCollapsed
-            ? "ml-[72px] pl-10 duration-700"
-            : "ml-0 pl-64 duration-700"
+            ? "ml-[50px] pl-0 duration-700"
+            : "ml-0 pl-60 duration-700"
         }`}
       >
         {children}

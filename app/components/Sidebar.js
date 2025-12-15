@@ -1,10 +1,12 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../auth-context";
 import Image from "next/image";
 
+// 🎨 ICONS
 import {
   Menu,
   BarChart3,
@@ -12,6 +14,9 @@ import {
   ChevronRight,
   LogOut,
   Home,
+  Wallet,
+  Layers3,
+  PiggyBank,
 } from "lucide-react";
 
 export default function Sidebar({ onToggle }) {
@@ -20,11 +25,7 @@ export default function Sidebar({ onToggle }) {
   const pathname = usePathname();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
-
-  // dropdown in expanded mode
   const [openDropdown, setOpenDropdown] = useState(null);
-
-  // floating dropdown for collapsed mode
   const [hoverDropdown, setHoverDropdown] = useState(null);
 
   useEffect(() => {
@@ -42,7 +43,7 @@ export default function Sidebar({ onToggle }) {
 
   if (!access) return null;
 
-  // MENU ITEMS
+  // ✅ MENU ITEMS (ikon berbeda)
   const menuItems = [
     {
       id: "dashboard",
@@ -50,28 +51,24 @@ export default function Sidebar({ onToggle }) {
       path: "/dashboard",
       icon: <Home size={20} />,
     },
-
     {
       id: "transaksi",
-      name: "transaksi",
+      name: "Transaksi",
       path: "/transaksi",
-      icon: <BarChart3 size={20} />,
-     
+      icon: <Wallet size={20} className="text-emerald-600" />,
     },
     {
       id: "kategori",
-      name: "kategori",
+      name: "Kategori",
       path: "/kategori",
-      icon: <BarChart3 size={20} />,
+      icon: <Layers3 size={20} className="text-indigo-600" />,
     },
-
     {
       id: "budget",
-      name: "budget",
+      name: "Budget",
       path: "/budget",
-      icon: <BarChart3 size={20} />,
+      icon: <PiggyBank size={20} className="text-pink-500" />,
     },
-
     {
       id: "settings",
       name: "Settings",
@@ -85,6 +82,7 @@ export default function Sidebar({ onToggle }) {
     },
   ];
 
+  // Filter menu sesuai hak akses user
   const filteredMenu = menuItems
     .map((item) => {
       if (item.dropdown) {
@@ -99,7 +97,7 @@ export default function Sidebar({ onToggle }) {
     <aside
       className={`fixed top-0 left-0 h-screen text-gray-800 bg-white flex flex-col
         shadow-lg transition-[width] duration-300 z-50
-        ${isCollapsed ? "w-[72px]" : "w-64"}
+        ${isCollapsed ? "w-[66px]" : "w-56"}
       `}
     >
       {/* Toggle Button */}
@@ -113,7 +111,7 @@ export default function Sidebar({ onToggle }) {
         <Menu size={24} />
       </button>
 
-      {/* 1. HEADER (USER PROFILE) - Diam di atas */}
+      {/* Header */}
       <div className="flex flex-col px-8 py-6 border-b border-gray-100">
         <div
           className={`flex items-center gap-3 transition-all ${
@@ -141,6 +139,7 @@ export default function Sidebar({ onToggle }) {
         )}
       </div>
 
+      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-4 space-y-1 custom-scrollbar">
         {filteredMenu.map((item) => {
           const active = pathname === item.path;
@@ -152,17 +151,16 @@ export default function Sidebar({ onToggle }) {
                   className={`relative flex items-center gap-3 p-2 rounded-md cursor-pointer transition-all mb-1
                     ${
                       active
-                        ? "text-gray-600 font-semibold"
+                        ? "text-gray-800 font-semibold bg-blue-50"
                         : "hover:bg-gray-100"
                     }
                     ${isCollapsed ? "justify-center" : ""}
                   `}
                 >
-                  {/* Active left bar */}
+                  {/* Active indicator */}
                   {active && (
-                    <div className="absolute -left-4 top-1 h-8 w-1 bg-blue-600 "></div>
+                    <div className="absolute -left-4 top-1 h-8 w-1 bg-blue-600 rounded-r"></div>
                   )}
-
                   {item.icon}
                   {!isCollapsed && <span>{item.name}</span>}
                 </div>
@@ -170,7 +168,7 @@ export default function Sidebar({ onToggle }) {
             );
           }
 
-          // DROPDOWN logic
+          // Dropdown logic
           const isOpen = openDropdown === item.id;
 
           return (
@@ -184,7 +182,7 @@ export default function Sidebar({ onToggle }) {
                 onClick={() =>
                   !isCollapsed && setOpenDropdown(isOpen ? null : item.id)
                 }
-                className={`flex items-center gap-3 p-2 w-full z-50 rounded-md transition 
+                className={`flex items-center gap-3 p-2 w-full rounded-md transition 
                   ${isCollapsed ? "justify-center" : ""}
                   ${isOpen ? "bg-gray-100" : "hover:bg-gray-100"}
                 `}
@@ -203,27 +201,25 @@ export default function Sidebar({ onToggle }) {
                 )}
               </button>
 
-              {/* Expanded dropdown (Mode Normal) */}
+              {/* Expanded dropdown */}
               {!isCollapsed && isOpen && (
-                <div className="ml-6 mt-1 flex flex-col space-y-1  pl-2">
+                <div className="ml-6 mt-1 flex flex-col space-y-1 pl-2">
                   {item.dropdown.map((sub) => {
                     const activeSub = pathname === sub.path;
                     return (
                       <Link key={sub.id} href={sub.path}>
                         <div
-                          className={`relative flex items-center gap-3 p-2 rounded-md cursor-pointer transition-all mb-1
-                    ${
-                      active
-                        ? "text-gray-600 font-semibold"
-                        : "hover:bg-gray-100"
-                    }
-                    ${isCollapsed ? "justify-center" : ""}
-                  `}
+                          className={`relative flex items-center gap-3 p-2 rounded-md cursor-pointer transition-all
+                            ${
+                              activeSub
+                                ? "text-gray-800 font-semibold bg-blue-50"
+                                : "hover:bg-gray-100"
+                            }
+                          `}
                         >
                           {activeSub && (
-                            <div className="absolute -left-12 top-1 h-8 w-1 bg-blue-600 "></div>
+                            <div className="absolute -left-12 top-1 h-8 w-1 bg-blue-600 rounded-r"></div>
                           )}
-
                           {sub.name}
                         </div>
                       </Link>
@@ -232,14 +228,12 @@ export default function Sidebar({ onToggle }) {
                 </div>
               )}
 
-              {/* Floating dropdown (Mode Collapsed) */}
+              {/* Floating dropdown (collapsed mode) */}
               {isCollapsed && hoverDropdown === item.id && (
                 <div
-                  className="
-                    absolute left-[58px] top-auto bg-white shadow-xl p-4 rounded-xl w-56 z-60 animate-fadeIn -mt-10 "
-                  // Style tambahan agar sejajar dengan icon induknya bisa ditambahkan manual jika perlu
+                  className="absolute left-[58px] bg-white shadow-xl p-4 rounded-xl w-56 z-50 animate-fadeIn -mt-10"
                 >
-                  <div className="font-bold text-gray-700 px-2 pb-2 mb-2 ">
+                  <div className="font-bold text-gray-700 px-2 pb-2 mb-2 border-b border-gray-100">
                     {item.name}
                   </div>
                   {item.dropdown.map((sub) => (
@@ -256,7 +250,7 @@ export default function Sidebar({ onToggle }) {
         })}
       </nav>
 
-      {/* 3. LOGOUT */}
+      {/* Logout */}
       <div className="p-4 border-t border-gray-100 bg-white">
         <button
           onClick={handleLogout}

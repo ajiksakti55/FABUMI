@@ -15,9 +15,6 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // ==========================
-  // LOAD KATEGORI & HANDLE UI
-  // ==========================
   useEffect(() => {
     loadKategori();
   }, []);
@@ -28,7 +25,7 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
     if (json.ok) setKategoriList(json.data || []);
   }
 
-  // Tutup dropdown saat klik di luar area
+  // Tutup dropdown saat klik di luar
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -39,9 +36,7 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ==========================
-  // SORT KATEGORI (UTAMA > SUB)
-  // ==========================
+  // Urut kategori induk > sub
   function getSortedCategories() {
     const map = {};
     kategoriList.forEach((c) => {
@@ -66,9 +61,7 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
 
   const sortedKategori = getSortedCategories();
 
-  // ==========================
-  // FILTER HANDLER
-  // ==========================
+  // Toggle filter kategori
   const toggleFilter = (id) => {
     const kategori = kategoriList.find((k) => k.id === id);
     let newFilters = [...selectedFilters];
@@ -76,12 +69,10 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
     if (!kategori) return;
 
     if (selectedFilters.includes(id)) {
-      // uncheck → hapus sub juga
       newFilters = newFilters.filter((x) => x !== id);
       const subs = kategoriList.filter((k) => k.parentId === id).map((k) => k.id);
       newFilters = newFilters.filter((x) => !subs.includes(x));
     } else {
-      // check → tambahkan sub juga
       newFilters.push(id);
       const subs = kategoriList.filter((k) => k.parentId === id).map((k) => k.id);
       newFilters = [...new Set([...newFilters, ...subs])];
@@ -91,9 +82,7 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
     setCurrentPage(1);
   };
 
-  // ==========================
-  // DATE & FILTERING
-  // ==========================
+  // Filter transaksi berdasarkan tanggal & kategori
   const parseDate = (val) => {
     if (!val) return null;
     if (val._seconds) return new Date(val._seconds * 1000);
@@ -111,15 +100,10 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
     return true;
   });
 
-  // ==========================
-  // PAGINATION
-  // ==========================
+  // Pagination
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const pageItems = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  // ==========================
-  // DELETE HANDLER
-  // ==========================
   async function handleDelete(id) {
     if (!confirm("Hapus transaksi ini?")) return;
     setDeletingId(id);
@@ -136,9 +120,9 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
     }
   }
 
-  // ==========================
-  // RENDER
-  // ==========================
+  // ========================
+  // RESPONSIVE RENDER
+  // ========================
   return (
     <div className="space-y-5 text-gray-800 relative">
       {error && (
@@ -149,22 +133,24 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
 
       {/* Filter tanggal */}
       <div className="bg-white/70 p-4 rounded-xl shadow-sm border border-gray-100">
-        <h3 className="font-semibold mb-2 flex items-center gap-2">📅 Filter Transaksi</h3>
-        <div className="flex flex-wrap gap-4 items-center">
-          <div>
-            <label className="text-sm">Dari:</label>
+        <h3 className="font-semibold mb-2 flex items-center gap-2 text-sm sm:text-base">
+          📅 Filter Transaksi
+        </h3>
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 items-start sm:items-center">
+          <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 w-full sm:w-auto">
+            <label className="text-sm font-medium">Dari:</label>
             <input
               type="date"
-              className="ml-2 p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+              className="flex-1 sm:w-auto p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none text-sm"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
           </div>
-          <div>
-            <label className="text-sm">Sampai:</label>
+          <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 w-full sm:w-auto">
+            <label className="text-sm font-medium">Sampai:</label>
             <input
               type="date"
-              className="ml-2 p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+              className="flex-1 sm:w-auto p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none text-sm"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
@@ -174,14 +160,16 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
 
       {/* Filter kategori */}
       <div className="bg-white/70 p-4 rounded-xl shadow-sm border border-gray-100" ref={dropdownRef}>
-        <h3 className="font-semibold mb-2 flex items-center gap-2">📂 Filter Kategori</h3>
+        <h3 className="font-semibold mb-2 flex items-center gap-2 text-sm sm:text-base">
+          📂 Filter Kategori
+        </h3>
 
         <div className="relative">
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="w-full text-left px-4 py-2 border rounded-lg bg-white hover:bg-gray-50 transition-all flex justify-between items-center"
+            className="w-full text-left px-4 py-2 border rounded-lg bg-white hover:bg-gray-50 transition-all flex justify-between items-center text-sm"
           >
-            <span className="text-gray-700">
+            <span className="text-gray-700 truncate">
               {selectedFilters.length > 0
                 ? `${selectedFilters.length} kategori dipilih`
                 : "Pilih kategori..."}
@@ -190,7 +178,7 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
           </button>
 
           {isDropdownOpen && (
-            <div className="absolute z-20 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-y-auto p-3 animate-fadeIn">
+            <div className="absolute z-20 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-y-auto p-3 animate-fadeIn text-sm">
               {sortedKategori.map((k) => (
                 <label
                   key={k.id}
@@ -213,12 +201,14 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table / List */}
       {pageItems.length === 0 ? (
-        <p className="text-center text-gray-500 italic">Belum ada transaksi</p>
+        <p className="text-center text-gray-500 italic text-sm sm:text-base py-3">
+          Belum ada transaksi
+        </p>
       ) : (
         <div className="overflow-x-auto bg-white/80 rounded-xl shadow border border-gray-100">
-          <table className="w-full text-sm">
+          <table className="min-w-[650px] w-full text-xs sm:text-sm">
             <thead>
               <tr className="bg-gradient-to-r from-blue-50 to-indigo-50 text-gray-700">
                 <th className="py-3 px-4 text-left">Tanggal</th>
@@ -239,14 +229,16 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
                       t.type === "income" ? "text-green-600" : "text-red-600"
                     }`}
                   >
-                    <td className="py-2 px-4">{d ? d.toLocaleDateString("id-ID") : "-"}</td>
+                    <td className="py-2 px-4 whitespace-nowrap">
+                      {d ? d.toLocaleDateString("id-ID") : "-"}
+                    </td>
                     <td className="py-2 px-4">{t.description || "-"}</td>
                     <td className="py-2 px-4">{t.categoryName || "-"}</td>
                     <td className="py-2 px-4 capitalize">{t.type}</td>
-                    <td className="py-2 px-4 text-right">
+                    <td className="py-2 px-4 text-right whitespace-nowrap">
                       Rp {Number(t.amount).toLocaleString("id-ID")}
                     </td>
-                    <td className="py-2 px-4 text-center">
+                    <td className="py-2 px-4 text-center whitespace-nowrap">
                       <button
                         onClick={() => onEdit(t)}
                         className="px-3 py-1 rounded-md border text-sm hover:bg-gray-100"
@@ -271,9 +263,9 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 pt-3">
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 pt-3">
           <button
-            className="px-3 py-1 border rounded-lg hover:bg-gray-100 disabled:opacity-50"
+            className="px-3 py-1 border rounded-lg hover:bg-gray-100 disabled:opacity-50 text-sm"
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
           >
@@ -283,7 +275,7 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
             Halaman {currentPage} dari {totalPages}
           </span>
           <button
-            className="px-3 py-1 border rounded-lg hover:bg-gray-100 disabled:opacity-50"
+            className="px-3 py-1 border rounded-lg hover:bg-gray-100 disabled:opacity-50 text-sm"
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
           >

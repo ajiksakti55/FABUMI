@@ -36,7 +36,7 @@ export default function KategoriPage() {
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Form tambah/edit kategori */}
-        <div className="bg-white/80 backdrop-blur-sm shadow-md rounded-xl p-5 flex-1 border border-gray-100">
+        <div className="bg-white/80 backdrop-blur-sm shadow-md rounded-xl flex-1 border border-gray-100">
           <KategoriForm
             kategori={kategori}
             onSaved={() => {
@@ -49,7 +49,7 @@ export default function KategoriPage() {
         </div>
 
         {/* Daftar kategori */}
-        <div className="bg-white/80 backdrop-blur-sm shadow-md rounded-xl p-5 flex-1 border border-gray-100">
+        <div className="">
           <h2 className="font-medium mb-3 text-lg">📋 Daftar Kategori</h2>
           {loading ? (
             <p className="text-gray-500 italic">Memuat data...</p>

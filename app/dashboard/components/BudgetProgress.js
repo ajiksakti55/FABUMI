@@ -65,46 +65,52 @@ export default function BudgetProgress({ transaksi }) {
   // === Urutkan & ambil 5 tertinggi ===
   const topBudgets = budgetList.sort((a, b) => b.percent - a.percent).slice(0, 5);
 
-  // === State UI ===
+  // === UI: Loading/Error ===
   if (loading) {
     return (
-      <div className="bg-white/80 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-100">
-        <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-2">
+      <div className="bg-white/80 backdrop-blur-md p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 flex items-center gap-2 mb-2">
           <Wallet className="w-5 h-5 text-indigo-500" /> Budget Bulanan
         </h2>
-        <p className="text-gray-500 animate-pulse">Memuat data budget...</p>
+        <p className="text-gray-500 animate-pulse text-sm sm:text-base">
+          Memuat data budget...
+        </p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-white/80 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-100 text-red-600">
-        <h2 className="text-lg font-semibold flex items-center gap-2 mb-2">
+      <div className="bg-white/80 backdrop-blur-md p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 text-red-600">
+        <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 mb-2">
           <AlertTriangle className="w-5 h-5 text-red-500" /> Budget Bulanan
         </h2>
-        <p>{error}</p>
+        <p className="text-sm sm:text-base">{error}</p>
       </div>
     );
   }
 
+  // === UI: Main ===
   return (
-    <div className="bg-white/80 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-500 hover:shadow-xl">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+    <div className="bg-white/80 backdrop-blur-md p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-500 hover:shadow-xl">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 flex items-center gap-2">
           <Wallet className="w-5 h-5 text-indigo-500" /> 5 Budget Hampir Habis
         </h2>
-        <span className="text-sm text-gray-500">Periode: {monthKey}</span>
+        <span className="text-xs sm:text-sm text-gray-500">
+          Periode: {monthKey}
+        </span>
       </div>
 
+      {/* Body */}
       {topBudgets.length === 0 ? (
-        <p className="text-gray-500 italic text-center py-6">
+        <p className="text-gray-500 italic text-center py-6 text-sm sm:text-base">
           Belum ada data budget bulan ini.
         </p>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4 sm:space-y-5">
           {topBudgets.map((b, idx) => {
-            // Warna dinamis berdasarkan status
             const getColor = () => {
               if (b.percent >= 100) return "from-red-500 to-red-700";
               if (b.percent >= 90) return "from-orange-400 to-red-500";
@@ -115,42 +121,43 @@ export default function BudgetProgress({ transaksi }) {
             return (
               <div
                 key={b.id}
-                className="bg-white/70 border border-gray-100 p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
+                className="bg-white/70 border border-gray-100 p-3 sm:p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
               >
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium text-gray-800 capitalize">
+                {/* Nama dan Angka */}
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-2 gap-1">
+                  <span className="font-medium text-gray-800 capitalize text-sm sm:text-base">
                     {idx + 1}. {b.categoryName}
                   </span>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-xs sm:text-sm text-gray-600">
                     Rp {b.used.toLocaleString("id-ID")} / Rp{" "}
                     {b.limit.toLocaleString("id-ID")} ({b.percent}%)
                   </span>
                 </div>
 
-                {/* Progress bar dengan gradien dan label animasi */}
-                <div className="relative w-full h-4 bg-gray-200/70 rounded-full overflow-hidden">
+                {/* Progress Bar */}
+                <div className="relative w-full h-3 sm:h-4 bg-gray-200/70 rounded-full overflow-hidden">
                   <div
                     className={`absolute left-0 top-0 h-full rounded-full bg-gradient-to-r ${getColor()} transition-all duration-700 ease-out`}
                     style={{ width: `${Math.min(b.percent, 100)}%` }}
                   ></div>
                 </div>
 
-                {/* Info status */}
-                <div className="flex justify-between items-center mt-2">
+                {/* Status Info */}
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center mt-2 text-xs sm:text-sm gap-1">
                   {b.percent >= 100 ? (
-                    <p className="text-xs text-red-600 flex items-center gap-1">
+                    <p className="text-red-600 flex items-center gap-1">
                       <AlertTriangle className="w-3 h-3" /> Budget terlampaui!
                     </p>
                   ) : b.percent >= 80 ? (
-                    <p className="text-xs text-orange-500 flex items-center gap-1">
+                    <p className="text-orange-500 flex items-center gap-1">
                       <TrendingUp className="w-3 h-3" /> Hampir mencapai batas
                     </p>
                   ) : (
-                    <p className="text-xs text-green-600 flex items-center gap-1">
+                    <p className="text-green-600 flex items-center gap-1">
                       <TrendingDown className="w-3 h-3" /> Aman
                     </p>
                   )}
-                  <p className="text-xs text-gray-500">
+                  <p className="text-gray-500">
                     Sisa: Rp {(b.limit - b.used).toLocaleString("id-ID")}
                   </p>
                 </div>

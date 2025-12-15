@@ -27,8 +27,6 @@ export default function AddBudgetPage() {
       if (!json.ok) return;
 
       const list = json.data || [];
-
-      // Buat map parent->children
       const map = {};
       list.forEach((item) => {
         if (item.parentId) {
@@ -37,14 +35,11 @@ export default function AddBudgetPage() {
         }
       });
 
-      // Ambil kategori induk dan urutkan alfabet
       const parents = list
         .filter((c) => !c.parentId)
         .sort((a, b) => a.name.localeCompare(b.name));
 
       const result = [];
-
-      // Tambahkan induk dan sub di bawahnya
       parents.forEach((parent) => {
         result.push({
           id: parent.id,
@@ -74,7 +69,7 @@ export default function AddBudgetPage() {
     }
   }
 
-  // Format angka limit jadi 200.000 saat diketik
+  // Format angka ke ribuan (contoh: 200.000)
   function formatNumberInput(value) {
     const numeric = value.replace(/\D/g, "");
     return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -115,9 +110,9 @@ export default function AddBudgetPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-md bg-white/80 backdrop-blur-md shadow-xl rounded-2xl p-8 border border-gray-100 transition-all duration-500 hover:shadow-2xl">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center gap-2">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center px-6 -mt-30 sm:mt-0 sm:p-6">
+      <div className="w-full max-w-md bg-white/80 backdrop-blur-md shadow-xl rounded-2xl p-6 sm:p-8 border border-gray-100 transition-all duration-500 hover:shadow-2xl">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center gap-2">
           <span>✨</span> Tambah Budget Baru
         </h1>
 
@@ -129,17 +124,13 @@ export default function AddBudgetPage() {
             </label>
 
             {loadingKategori ? (
-              <div className="text-gray-500 text-sm">
-                Memuat daftar kategori...
-              </div>
+              <div className="text-gray-500 text-sm">Memuat daftar kategori...</div>
             ) : (
               <select
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 outline-none bg-white"
+                className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 outline-none bg-white text-sm sm:text-base"
                 value={categoryId}
                 onChange={(e) => {
-                  const found = kategoriList.find(
-                    (x) => x.id === e.target.value
-                  );
+                  const found = kategoriList.find((x) => x.id === e.target.value);
                   setCategoryId(e.target.value);
                   setCategoryName(found ? found.name : "");
                 }}
@@ -151,9 +142,7 @@ export default function AddBudgetPage() {
                     key={k.id}
                     value={k.id}
                     className={
-                      k.isSub
-                        ? "pl-6 text-gray-600"
-                        : "font-semibold text-gray-800"
+                      k.isSub ? "pl-6 text-gray-600" : "font-semibold text-gray-800"
                     }
                   >
                     {k.label}
@@ -168,14 +157,17 @@ export default function AddBudgetPage() {
             <label className="block text-sm font-semibold text-gray-700 mb-1">
               Limit (Rp)
             </label>
-            <input
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 outline-none"
-              type="text"
-              placeholder="Contoh: 2.000.000"
-              value={limit}
-              onChange={handleLimitChange}
-              required
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-3 text-gray-500 text-sm">Rp</span>
+              <input
+                className="w-full pl-8 p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 outline-none text-sm sm:text-base"
+                type="text"
+                placeholder="Contoh: 2.000.000"
+                value={limit}
+                onChange={handleLimitChange}
+                required
+              />
+            </div>
           </div>
 
           {/* Bulan */}
@@ -184,8 +176,7 @@ export default function AddBudgetPage() {
               Bulan
             </label>
             <input
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 outline-none"
-              placeholder="contoh : 2025-12"
+              className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 outline-none text-sm sm:text-base"
               type="month"
               value={month}
               onChange={(e) => setMonth(e.target.value)}
@@ -194,7 +185,7 @@ export default function AddBudgetPage() {
           </div>
 
           {/* Checkbox */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mt-2">
             <input
               type="checkbox"
               checked={continueNextMonth}
@@ -207,11 +198,11 @@ export default function AddBudgetPage() {
           </div>
 
           {/* Tombol Aksi */}
-          <div className="flex justify-between items-center pt-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-5">
             <button
               type="button"
               onClick={() => router.push("/budget")}
-              className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-all duration-300"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-all duration-300 text-sm sm:text-base"
             >
               Batal
             </button>
@@ -219,7 +210,7 @@ export default function AddBudgetPage() {
             <button
               type="submit"
               disabled={saving}
-              className={`px-5 py-2.5 rounded-lg text-white font-medium shadow-md transition-all duration-300 ${
+              className={`w-full sm:w-auto px-5 py-2.5 rounded-lg text-white font-medium shadow-md transition-all duration-300 text-sm sm:text-base ${
                 saving
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-gradient-to-r from-blue-500 to-indigo-600 hover:scale-105 hover:shadow-lg"
