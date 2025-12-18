@@ -72,7 +72,7 @@ export default function Sidebar({ onToggle }) {
     <>
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden md:flex fixed top-0 left-0 h-screen text-gray-800 bg-white flex-col shadow-lg transition-[width] duration-300 z-50
+        className={`hidden md:flex fixed top-0 left-0 h-screen text-gray-800 bg-white flex-col shadow-lg transition-[width] duration-300 z-[998]
           ${isCollapsed ? "w-[66px]" : "w-56"}
         `}
       >
@@ -145,7 +145,7 @@ export default function Sidebar({ onToggle }) {
             return (
               <div
                 key={item.id}
-                className="mb-1"
+                className="mb-1 relative"
                 onMouseEnter={() => isCollapsed && setHoverDropdown(item.id)}
                 onMouseLeave={() => isCollapsed && setHoverDropdown(null)}
               >
@@ -172,6 +172,7 @@ export default function Sidebar({ onToggle }) {
                   )}
                 </button>
 
+                {/* Expanded dropdown (desktop) */}
                 {!isCollapsed && isOpen && (
                   <div className="ml-6 mt-1 flex flex-col space-y-1 pl-2">
                     {item.dropdown.map((sub) => {
@@ -192,6 +193,24 @@ export default function Sidebar({ onToggle }) {
                         </Link>
                       );
                     })}
+                  </div>
+                )}
+
+                {/* Floating dropdown (collapsed or mobile) */}
+                {hoverDropdown === item.id && (
+                  <div
+                    className="fixed md:absolute left-4 md:left-[58px] bottom-20 md:bottom-auto bg-white shadow-xl p-4 rounded-xl w-56 z-[999] animate-fadeIn"
+                  >
+                    <div className="font-bold text-gray-700 px-2 pb-2 mb-2 border-b border-gray-100">
+                      {item.name}
+                    </div>
+                    {item.dropdown.map((sub) => (
+                      <Link key={sub.id} href={sub.path}>
+                        <div className="p-2 hover:bg-gray-100 rounded-md text-sm cursor-pointer text-gray-600">
+                          {sub.name}
+                        </div>
+                      </Link>
+                    ))}
                   </div>
                 )}
               </div>
@@ -222,7 +241,7 @@ export default function Sidebar({ onToggle }) {
 // === MOBILE NAVBAR ===
 function MobileNav({ pathname, menuItems, handleLogout }) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg flex justify-around items-center py-2 md:hidden z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg flex justify-around items-center py-2 md:hidden z-[999]">
       {menuItems.slice(0, 4).map((item) => {
         const active = pathname === item.path;
         return (

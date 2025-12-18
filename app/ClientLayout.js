@@ -10,12 +10,9 @@ function LayoutContent({ children }) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Halaman yang TIDAK pakai sidebar + TIDAK butuh login
   const publicRoutes = ["/login"];
-
   const isPublic = publicRoutes.includes(pathname);
 
-  // Saat loading auth
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -24,26 +21,21 @@ function LayoutContent({ children }) {
     );
   }
 
-  // ======== Halaman PUBLIC ========
   if (isPublic) {
     return <div className="min-h-screen bg-white">{children}</div>;
   }
 
-  // ======== Halaman PRIVATE (harus login) ========
   if (!currentUser) {
     return <div className="min-h-screen bg-white">{children}</div>;
   }
 
-  // ======== Layout dengan SIDEBAR ========
   return (
-    <div className="flex h-screen">
+    <div className="flex min-h-screen bg-white">
       <Sidebar onToggle={setIsCollapsed} />
       <main
-        className={`flex-1 overflow-y-auto overflow-x-hidden bg-white transition-all duration-300 ${
-          isCollapsed
-            ? "ml-[50px] pl-0 duration-700"
-            : "ml-0 pl-60 duration-700"
-        }`}
+        className={`flex-1 overflow-y-auto overflow-x-hidden transition-all duration-300
+          ${isCollapsed ? "md:ml-[66px]" : "md:ml-56"} md:pb-0 pb-14
+        `}
       >
         {children}
       </main>
