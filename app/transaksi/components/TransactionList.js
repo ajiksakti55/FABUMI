@@ -13,7 +13,9 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
   const ITEMS_PER_PAGE = 10;
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
   const dropdownRef = useRef(null);
+  const buttonRef = useRef(null);
 
   useEffect(() => {
     loadKategori();
@@ -25,10 +27,37 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
     if (json.ok) setKategoriList(json.data || []);
   }
 
+  // Hitung posisi dropdown agar tidak menggeser layout
+  const updateDropdownPosition = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.bottom + 6,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (isDropdownOpen) {
+      updateDropdownPosition();
+      window.addEventListener("scroll", updateDropdownPosition);
+      window.addEventListener("resize", updateDropdownPosition);
+    } else {
+      window.removeEventListener("scroll", updateDropdownPosition);
+      window.removeEventListener("resize", updateDropdownPosition);
+    }
+  }, [isDropdownOpen]);
+
   // Tutup dropdown saat klik di luar
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target) &&
+        !buttonRef.current.contains(e.target)
+      ) {
         setIsDropdownOpen(false);
       }
     };
@@ -82,7 +111,7 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
     setCurrentPage(1);
   };
 
-  // Filter transaksi berdasarkan tanggal & kategori
+  // Filter transaksi
   const parseDate = (val) => {
     if (!val) return null;
     if (val._seconds) return new Date(val._seconds * 1000);
@@ -121,7 +150,7 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
   }
 
   // ========================
-  // RESPONSIVE RENDER
+  // RENDER
   // ========================
   return (
     <div className="space-y-5 text-gray-800 relative">
@@ -132,7 +161,7 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
       )}
 
       {/* Filter tanggal */}
-      <div className="bg-white/70 p-4 rounded-xl shadow-sm border border-gray-100">
+      <div className="bg-white/70 p-4 rounded-xl shadow-sm border border-gray-100 z-10">
         <h3 className="font-semibold mb-2 flex items-center gap-2 text-sm sm:text-base">
           📅 Filter Transaksi
         </h3>
@@ -159,106 +188,174 @@ export default function TransactionList({ transaksi = [], onEdit = () => {}, onD
       </div>
 
       {/* Filter kategori */}
-      <div className="bg-white/70 p-4 rounded-xl shadow-sm border border-gray-100" ref={dropdownRef}>
+      <div className="bg-white/70 p-4 rounded-xl shadow-sm border border-gray-100">
         <h3 className="font-semibold mb-2 flex items-center gap-2 text-sm sm:text-base">
           📂 Filter Kategori
         </h3>
 
-        <div className="relative">
-          <button
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="w-full text-left px-4 py-2 border rounded-lg bg-white hover:bg-gray-50 transition-all flex justify-between items-center text-sm"
-          >
-            <span className="text-gray-700 truncate">
-              {selectedFilters.length > 0
-                ? `${selectedFilters.length} kategori dipilih`
-                : "Pilih kategori..."}
-            </span>
-            <span className="text-gray-500">{isDropdownOpen ? "▲" : "▼"}</span>
-          </button>
-
-          {isDropdownOpen && (
-            <div className="absolute z-20 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-y-auto p-3 animate-fadeIn text-sm">
-              {sortedKategori.map((k) => (
-                <label
-                  key={k.id}
-                  className={`flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-blue-50 ${
-                    k.isSub ? "pl-6" : ""
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedFilters.includes(k.id)}
-                    onChange={() => toggleFilter(k.id)}
-                  />
-                  <span className={k.isSub ? "text-gray-600" : "font-medium"}>
-                    {k.isSub ? `↳ ${k.name}` : k.name}
-                  </span>
-                </label>
-              ))}
-            </div>
-          )}
-        </div>
+        <button
+          ref={buttonRef}
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="w-full text-left px-4 py-2 border rounded-lg bg-white hover:bg-gray-50 transition-all flex justify-between items-center text-sm"
+        >
+          <span className="text-gray-700 truncate">
+            {selectedFilters.length > 0
+              ? `${selectedFilters.length} kategori dipilih`
+              : "Pilih kategori..."}
+          </span>
+          <span className="text-gray-500">{isDropdownOpen ? "▲" : "▼"}</span>
+        </button>
       </div>
 
-      {/* Table / List */}
+      {/* DROPDOWN FIXED */}
+      {isDropdownOpen && (
+        <div
+          ref={dropdownRef}
+          className="fixed bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-y-auto p-3 text-sm z-[9999]"
+          style={{
+            top: dropdownPos.top,
+            left: dropdownPos.left,
+            width: dropdownPos.width,
+          }}
+        >
+          {sortedKategori.map((k) => (
+            <label
+              key={k.id}
+              className={`flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-blue-50 ${
+                k.isSub ? "pl-6" : ""
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={selectedFilters.includes(k.id)}
+                onChange={() => toggleFilter(k.id)}
+              />
+              <span className={k.isSub ? "text-gray-600" : "font-medium"}>
+                {k.isSub ? ` ${k.name}` : k.name}
+              </span>
+            </label>
+          ))}
+        </div>
+      )}
+
+      {/* === 💻 DESKTOP TABLE === */}
       {pageItems.length === 0 ? (
         <p className="text-center text-gray-500 italic text-sm sm:text-base py-3">
           Belum ada transaksi
         </p>
       ) : (
-        <div className="overflow-x-auto bg-white/80 rounded-xl shadow border border-gray-100">
-          <table className="min-w-[650px] w-full text-xs sm:text-sm">
-            <thead>
-              <tr className="bg-gradient-to-r from-blue-50 to-indigo-50 text-gray-700">
-                <th className="py-3 px-4 text-left">Tanggal</th>
-                <th className="py-3 px-4 text-left">Deskripsi</th>
-                <th className="py-3 px-4 text-left">Kategori</th>
-                <th className="py-3 px-4 text-left">Tipe</th>
-                <th className="py-3 px-4 text-right">Nominal</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pageItems.map((t) => {
-                const d = parseDate(t.date);
-                return (
-                  <tr
-                    key={t.id}
-                    className={`border-t hover:bg-blue-50/50 transition-all ${
-                      t.type === "income" ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    <td className="py-2 px-4 whitespace-nowrap">
+        <>
+          {/* Desktop View */}
+          <div className="hidden sm:block overflow-x-auto bg-white/80 rounded-xl shadow border border-gray-100">
+            <table className="min-w-full text-sm text-gray-700">
+              <thead>
+                <tr className="bg-gradient-to-r from-blue-50 to-indigo-50 text-gray-700">
+                  <th className="py-3 px-4 text-left">Tanggal</th>
+                  <th className="py-3 px-4 text-left">Deskripsi</th>
+                  <th className="py-3 px-4 text-left">Kategori</th>
+                  <th className="py-3 px-4 text-left">Tipe</th>
+                  <th className="py-3 px-4 text-right">Nominal</th>
+                  <th className="py-3 px-4 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pageItems.map((t) => {
+                  const d = parseDate(t.date);
+                  return (
+                    <tr
+                      key={t.id}
+                      className={`border-t hover:bg-blue-50/50 transition-all ${
+                        t.type === "income" ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
+                      <td className="py-2 px-4 whitespace-nowrap">
+                        {d ? d.toLocaleDateString("id-ID") : "-"}
+                      </td>
+                      <td className="py-2 px-4">{t.description || "-"}</td>
+                      <td className="py-2 px-4">{t.categoryName || "-"}</td>
+                      <td className="py-2 px-4 capitalize">{t.type}</td>
+                      <td className="py-2 px-4 text-right whitespace-nowrap">
+                        Rp {Number(t.amount).toLocaleString("id-ID")}
+                      </td>
+                      <td className="py-2 px-4 text-center whitespace-nowrap">
+                        <button
+                          onClick={() => onEdit(t)}
+                          className="px-3 py-1 rounded-md border text-sm hover:bg-gray-100"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => handleDelete(t.id)}
+                          disabled={deletingId === t.id}
+                          className="px-3 py-1 rounded-md border border-red-300 text-sm text-red-600 ml-2 hover:bg-red-50"
+                        >
+                          {deletingId === t.id ? "..." : "🗑️"}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* === 📱 MOBILE CARD LIST === */}
+          <div className="sm:hidden space-y-3">
+            {pageItems.map((t) => {
+              const d = parseDate(t.date);
+              return (
+                <div
+                  key={t.id}
+                  className="p-4 rounded-xl border border-gray-100 shadow-sm bg-white flex flex-col gap-1 hover:shadow-md transition-all"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-500">
                       {d ? d.toLocaleDateString("id-ID") : "-"}
-                    </td>
-                    <td className="py-2 px-4">{t.description || "-"}</td>
-                    <td className="py-2 px-4">{t.categoryName || "-"}</td>
-                    <td className="py-2 px-4 capitalize">{t.type}</td>
-                    <td className="py-2 px-4 text-right whitespace-nowrap">
+                    </span>
+                    <span
+                      className={`text-xs font-semibold ${
+                        t.type === "income" ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
                       Rp {Number(t.amount).toLocaleString("id-ID")}
-                    </td>
-                    <td className="py-2 px-4 text-center whitespace-nowrap">
-                      <button
-                        onClick={() => onEdit(t)}
-                        className="px-3 py-1 rounded-md border text-sm hover:bg-gray-100"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        onClick={() => handleDelete(t.id)}
-                        disabled={deletingId === t.id}
-                        className="px-3 py-1 rounded-md border border-red-300 text-sm text-red-600 ml-2 hover:bg-red-50"
-                      >
-                        {deletingId === t.id ? "..." : "🗑️"}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </span>
+                  </div>
+
+                  <div className="text-sm font-medium text-gray-700">
+                    {t.description || "-"}
+                  </div>
+
+                  <div className="text-xs text-gray-500 flex justify-between items-center">
+                    <span>{t.categoryName || "-"}</span>
+                    <span
+                      className={`capitalize ${
+                        t.type === "income" ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
+                      {t.type}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-end gap-2 mt-2">
+                    <button
+                      onClick={() => onEdit(t)}
+                      className="px-3 py-1 border rounded-md text-sm hover:bg-gray-100"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => handleDelete(t.id)}
+                      disabled={deletingId === t.id}
+                      className="px-3 py-1 border border-red-300 rounded-md text-sm text-red-600 hover:bg-red-50"
+                    >
+                      {deletingId === t.id ? "..." : "🗑️"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* Pagination */}

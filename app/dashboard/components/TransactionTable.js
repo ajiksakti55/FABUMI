@@ -19,51 +19,86 @@ export default function TransactionTable({ filtered, formatDate }) {
           Belum ada transaksi
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-100">
-          {/* ✅ Scroll horizontal di HP, tabel tetap utuh di PC */}
-          <table className="min-w-[600px] w-full text-xs sm:text-sm text-gray-700">
-            <thead>
-              <tr className="bg-gradient-to-r from-blue-50 to-indigo-50 text-gray-700">
-                <th className="py-3 px-4 text-left font-semibold">Tanggal</th>
-                <th className="py-3 px-4 text-left font-semibold">Kategori</th>
-                <th className="py-3 px-4 text-left font-semibold">Tipe</th>
-                <th className="py-3 px-4 text-right font-semibold">Nominal</th>
-              </tr>
-            </thead>
+        <>
+          {/* === 💻 DESKTOP MODE === */}
+          <div className="hidden sm:block overflow-x-auto rounded-xl border border-gray-100">
+            <table className="min-w-full text-sm text-gray-700">
+              <thead>
+                <tr className="bg-gradient-to-r from-blue-50 to-indigo-50 text-gray-700">
+                  <th className="py-3 px-4 text-left font-semibold">Tanggal</th>
+                  <th className="py-3 px-4 text-left font-semibold">Kategori</th>
+                  <th className="py-3 px-4 text-left font-semibold">Tipe</th>
+                  <th className="py-3 px-4 text-right font-semibold">Nominal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.slice(0, 5).map((t, idx) => (
+                  <tr
+                    key={t.id || idx}
+                    className={`transition-all duration-200 hover:bg-blue-50/50 ${
+                      idx % 2 === 0 ? "bg-white" : "bg-gray-50/70"
+                    }`}
+                  >
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      {formatDate(t.date)}
+                    </td>
+                    <td className="py-3 px-4 font-medium whitespace-nowrap">
+                      {t.categoryName}
+                    </td>
+                    <td
+                      className={`py-3 px-4 capitalize font-medium whitespace-nowrap ${
+                        t.type === "income" ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
+                      {t.type === "income" ? "Pemasukan" : "Pengeluaran"}
+                    </td>
+                    <td
+                      className={`py-3 px-4 text-right font-semibold whitespace-nowrap ${
+                        t.type === "income" ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
+                      Rp {Number(t.amount).toLocaleString("id-ID")}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-            <tbody>
-              {filtered.slice(0, 5).map((t, idx) => (
-                <tr
-                  key={t.id || idx}
-                  className={`transition-all duration-200 hover:bg-blue-50/50 ${
-                    idx % 2 === 0 ? "bg-white" : "bg-gray-50/70"
+          {/* === 📱 MOBILE MODE === */}
+          <div className="sm:hidden space-y-3">
+            {filtered.slice(0, 5).map((t, idx) => (
+              <div
+                key={t.id || idx}
+                className="p-3 border border-gray-100 rounded-xl bg-white shadow-sm hover:shadow-md transition-all"
+              >
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-500">{formatDate(t.date)}</span>
+                  <span
+                    className={`text-xs font-semibold ${
+                      t.type === "income" ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {t.type === "income" ? "+ " : "- "}Rp{" "}
+                    {Number(t.amount).toLocaleString("id-ID")}
+                  </span>
+                </div>
+
+                <div className="mt-1 font-medium text-gray-700 text-sm">
+                  {t.categoryName}
+                </div>
+
+                <div
+                  className={`text-xs mt-1 font-semibold ${
+                    t.type === "income" ? "text-green-600" : "text-red-600"
                   }`}
                 >
-                  <td className="py-3 px-4 whitespace-nowrap">
-                    {formatDate(t.date)}
-                  </td>
-                  <td className="py-3 px-4 font-medium whitespace-nowrap">
-                    {t.categoryName}
-                  </td>
-                  <td
-                    className={`py-3 px-4 capitalize font-medium whitespace-nowrap ${
-                      t.type === "income" ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    {t.type === "income" ? "Pemasukan" : "Pengeluaran"}
-                  </td>
-                  <td
-                    className={`py-3 px-4 text-right font-semibold whitespace-nowrap ${
-                      t.type === "income" ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    Rp {Number(t.amount).toLocaleString("id-ID")}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  {t.type === "income" ? "Pemasukan" : "Pengeluaran"}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Footer link */}

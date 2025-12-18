@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../auth-context";
@@ -23,6 +23,8 @@ export default function Sidebar({ onToggle }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [hoverDropdown, setHoverDropdown] = useState(null);
+
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     if (onToggle) onToggle(isCollapsed);
@@ -67,10 +69,9 @@ export default function Sidebar({ onToggle }) {
     })
     .filter(Boolean);
 
-  // ✅ === DESKTOP SIDEBAR ===
   return (
     <>
-      {/* Desktop Sidebar */}
+      {/* === DESKTOP SIDEBAR === */}
       <aside
         className={`hidden md:flex fixed top-0 left-0 h-screen text-gray-800 bg-white flex-col shadow-lg transition-[width] duration-300 z-[998]
           ${isCollapsed ? "w-[66px]" : "w-56"}
@@ -172,7 +173,7 @@ export default function Sidebar({ onToggle }) {
                   )}
                 </button>
 
-                {/* Expanded dropdown (desktop) */}
+                {/* Expanded dropdown (desktop normal) */}
                 {!isCollapsed && isOpen && (
                   <div className="ml-6 mt-1 flex flex-col space-y-1 pl-2">
                     {item.dropdown.map((sub) => {
@@ -196,10 +197,15 @@ export default function Sidebar({ onToggle }) {
                   </div>
                 )}
 
-                {/* Floating dropdown (collapsed or mobile) */}
+                {/* Floating dropdown (desktop collapsed or mobile) */}
                 {hoverDropdown === item.id && (
                   <div
-                    className="fixed md:absolute left-4 md:left-[58px] bottom-20 md:bottom-auto bg-white shadow-xl p-4 rounded-xl w-56 z-[999] animate-fadeIn"
+                    ref={dropdownRef}
+                    className="fixed bg-white shadow-xl p-4 rounded-xl w-56 z-999] animate-fadeSlideIn"
+                    style={{
+                      left: isCollapsed ? "50px" : "200px",
+                      top: "250px",
+                    }}
                   >
                     <div className="font-bold text-gray-700 px-2 pb-2 mb-2 border-b border-gray-100">
                       {item.name}
@@ -232,7 +238,7 @@ export default function Sidebar({ onToggle }) {
         </div>
       </aside>
 
-      {/* ✅ MOBILE NAV */}
+      {/* === MOBILE NAV === */}
       <MobileNav pathname={pathname} menuItems={filteredMenu} handleLogout={handleLogout} />
     </>
   );
