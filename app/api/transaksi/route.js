@@ -3,34 +3,52 @@ import { adminDb } from "@/lib/firebase_admin";
 import admin from "firebase-admin";
 
 /**
- * GET transaksi
- * Query params supported: month, type, limit
+ * ✅ GET transaksi — aman untuk data lama & baru
+ * Support: month, type, limit
  */
 export async function GET(request) {
   try {
     const url = new URL(request.url);
     const month = url.searchParams.get("month");
     const type = url.searchParams.get("type");
-    const limit = parseInt(url.searchParams.get("limit") || "100", 10);
+    const limit = parseInt(url.searchParams.get("limit") || "200", 10);
 
-    let query = adminDb.collection("transaksi").orderBy("createdAt", "desc");
+    let query = adminDb.collection("transaksi");
 
     if (type) query = query.where("type", "==", type);
     if (month) query = query.where("month", "==", month);
 
-    const snap = await query.limit(limit).get();
+    let snap;
+    try {
+      // 🔹 Coba ambil data berdasarkan date
+      snap = await query.orderBy("date", "desc").limit(limit).get();
+    } catch (err) {
+      console.warn("⚠️ orderBy('date') gagal, fallback tanpa order:", err.message);
+      // 🔹 Kalau gagal (karena field hilang / salah tipe), ambil tanpa order
+      snap = await query.limit(limit).get();
+    }
 
-    const data = snap.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate
-        ? doc.data().createdAt.toDate().toISOString()
-        : null,
-    }));
+    // 🔹 Jika hasil kosong, ambil semua transaksi tanpa filter
+    if (snap.empty) {
+      console.warn("⚠️ Tidak ada hasil, fallback ambil semua transaksi tanpa filter");
+      const allSnap = await adminDb.collection("transaksi").orderBy("createdAt", "desc").limit(limit).get();
+      snap = allSnap;
+    }
 
+    const data = snap.docs.map((doc) => {
+      const d = doc.data();
+      return {
+        id: doc.id,
+        ...d,
+        date: d.date?.toDate ? d.date.toDate().toISOString() : null,
+        createdAt: d.createdAt?.toDate ? d.createdAt.toDate().toISOString() : null,
+      };
+    });
+
+    console.log(`✅ GET /api/transaksi -> ${data.length} transaksi`);
     return NextResponse.json({ ok: true, data });
   } catch (err) {
-    console.error("GET /api/transaksi error:", err);
+    console.error("🔥 GET /api/transaksi fatal error:", err);
     return NextResponse.json(
       { ok: false, error: "Failed to fetch transaksi" },
       { status: 500 }
@@ -39,21 +57,12 @@ export async function GET(request) {
 }
 
 /**
- * POST transaksi + AUTO UPDATE BUDGET
- * Expected body: { amount, type, categoryId, categoryName, parentId, description, date }
+ * ✅ POST transaksi + AUTO UPDATE BUDGET
  */
 export async function POST(request) {
   try {
     const body = await request.json();
-    const {
-      amount,
-      type,
-      categoryId,
-      categoryName,
-      parentId,
-      description,
-      date,
-    } = body;
+    const { amount, type, categoryId, categoryName, parentId, description, date } = body;
 
     if (amount == null || !type || !categoryId || !date) {
       return NextResponse.json(
@@ -64,13 +73,9 @@ export async function POST(request) {
 
     const parsedDate = new Date(date);
     if (isNaN(parsedDate.getTime())) {
-      return NextResponse.json(
-        { ok: false, error: "Invalid date format" },
-        { status: 400 }
-      );
+      return NextResponse.json({ ok: false, error: "Invalid date format" }, { status: 400 });
     }
 
-    // month key for budget matching
     const y = parsedDate.getUTCFullYear();
     const m = String(parsedDate.getUTCMonth() + 1).padStart(2, "0");
     const monthKey = `${y}-${m}`;
@@ -87,10 +92,9 @@ export async function POST(request) {
       month: monthKey,
     };
 
-    // 1) Save transaction
     const docRef = await adminDb.collection("transaksi").add(data);
 
-    // 2) If expense, try update matching budget by categoryId + month
+    // 🔹 Auto-update budget bila expense
     if (type === "expense") {
       const budgetSnap = await adminDb
         .collection("budgets")
@@ -103,7 +107,6 @@ export async function POST(request) {
         const budgetDoc = budgetSnap.docs[0];
         const budget = budgetDoc.data();
 
-        // recalc total used for this category/month
         const transSnap = await adminDb
           .collection("transaksi")
           .where("categoryId", "==", categoryId)
@@ -117,7 +120,6 @@ export async function POST(request) {
         );
 
         const remaining = Number(budget.limit || 0) - totalUsed;
-
         let status = "safe";
         if (remaining <= 0) status = "over";
         else if (remaining <= (budget.limit || 0) * 0.2) status = "warning";
@@ -146,21 +148,12 @@ export async function POST(request) {
 }
 
 /**
- * PUT transaksi (update)
+ * ✅ PUT transaksi (update)
  */
 export async function PUT(request) {
   try {
     const body = await request.json();
-    const {
-      id,
-      amount,
-      type,
-      categoryId,
-      categoryName,
-      parentId,
-      description,
-      date,
-    } = body;
+    const { id, amount, type, categoryId, categoryName, parentId, description, date } = body;
 
     if (!id || amount == null || !type || !categoryId || !date) {
       return NextResponse.json(
@@ -183,15 +176,11 @@ export async function PUT(request) {
       description: description || "",
       date: admin.firestore.Timestamp.fromDate(parsedDate),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      month: `${parsedDate.getUTCFullYear()}-${String(parsedDate.getUTCMonth()+1).padStart(2,"0")}`,
+      month: `${parsedDate.getUTCFullYear()}-${String(parsedDate.getUTCMonth() + 1).padStart(2, "0")}`,
     };
 
     await adminDb.collection("transaksi").doc(id).update(update);
     const updated = await adminDb.collection("transaksi").doc(id).get();
-
-    // Optional: after update, re-calc affected budget(s)
-    // Recalculate budget for old/new category/month would be ideal, but skipping here for brevity.
-    // If you want PUT to recalc, I can add it.
 
     return NextResponse.json({
       ok: true,
@@ -207,7 +196,7 @@ export async function PUT(request) {
 }
 
 /**
- * DELETE transaksi
+ * ✅ DELETE transaksi
  */
 export async function DELETE(request) {
   try {
@@ -221,7 +210,6 @@ export async function DELETE(request) {
       );
     }
 
-    // Before delete, optionally you can recalc budget after deletion.
     await adminDb.collection("transaksi").doc(id).delete();
     return NextResponse.json({ ok: true, message: "Deleted" });
   } catch (err) {
