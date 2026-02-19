@@ -18,7 +18,7 @@ export default function TransactionForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // Dropdown state
+  // Dropdown
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [expandedParent, setExpandedParent] = useState(null);
@@ -50,6 +50,30 @@ export default function TransactionForm({
       console.error("Failed to fetch categories", err);
     }
   }
+
+  // ===== AUTO ISI SAAT EDITING =====
+  useEffect(() => {
+    if (editing) {
+      setAmount(formatNumber(editing.amount || 0));
+      setRawAmount(Number(editing.amount || 0));
+      setType(editing.type || "expense");
+      setCategoryId(editing.categoryId || "");
+      setDescription(editing.description || "");
+      setDate(
+        editing.date
+          ? new Date(editing.date).toISOString().split("T")[0]
+          : ""
+      );
+    } else {
+      // Reset kalau bukan mode edit
+      setAmount("");
+      setRawAmount(0);
+      setType("expense");
+      setCategoryId("");
+      setDescription("");
+      setDate("");
+    }
+  }, [editing]);
 
   // ===== Tutup dropdown kalau klik di luar =====
   useEffect(() => {
@@ -101,7 +125,7 @@ export default function TransactionForm({
     }
   });
 
-  // ===== Search logic (parent & subkategori) =====
+  // ===== Search logic =====
   const searchLower = search.toLowerCase();
   const matchedParents = [];
   const matchedChildrenMap = {};
@@ -111,8 +135,6 @@ export default function TransactionForm({
     const matchedChildren = (childrenMap[p.id] || []).filter((sub) =>
       sub.name.toLowerCase().includes(searchLower)
     );
-
-    // tampilkan parent kalau dia cocok, atau ada child yang cocok, atau tidak sedang search
     if (parentMatch || matchedChildren.length > 0 || search === "") {
       matchedParents.push(p);
       matchedChildrenMap[p.id] =
@@ -146,15 +168,14 @@ export default function TransactionForm({
       const res = await fetch("/api/transaksi", {
         method: editing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          editing ? { ...payload, id: editing.id } : payload
-        ),
+        body: JSON.stringify(editing ? { ...payload, id: editing.id } : payload),
       });
 
       const json = await res.json();
       if (!json.ok) throw new Error(json.error || "Gagal menyimpan");
 
       onSaved();
+      // reset form
       setAmount("");
       setRawAmount(0);
       setType("expense");
@@ -182,7 +203,6 @@ export default function TransactionForm({
           width: dropdownPos.width,
         }}
       >
-        {/* Sticky search bar */}
         <div className="sticky top-0 bg-white z-[1000000]">
           <input
             type="text"
@@ -193,7 +213,6 @@ export default function TransactionForm({
           />
         </div>
 
-        {/* Daftar hasil */}
         {matchedParents.length === 0 ? (
           <p className="text-gray-500 text-sm text-center py-2">
             Tidak ada hasil
@@ -217,7 +236,6 @@ export default function TransactionForm({
                 )}
               </div>
 
-              {/* Subkategori */}
               {(expandedParent === p.id || search !== "") &&
                 (matchedChildrenMap[p.id] || []).map((sub) => (
                   <div
