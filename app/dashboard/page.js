@@ -202,13 +202,13 @@ export default function DashboardPage() {
       {/* ✅ FIXED MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
-          <div className="min-h-screen flex items-start justify-center p-4 pt-10">
+          <div className="min-h-screen flex items-start justify-center p-4 pt-5">
 
-            <div className="bg-white w-full max-w-md rounded-xl p-4 shadow-lg">
+            <div className="bg-white w-full max-w-md rounded-xl p-0 shadow-lg">
 
-              <div className="flex justify-between items-center mb-3">
-                <h2 className="text-lg font-semibold">Tambah Transaksi</h2>
-                <button onClick={() => setShowModal(false)}>✕</button>
+              <div className="flex justify-between items-center mb-0">
+                <h2 className=""></h2>
+                <button onClick={() => setShowModal(false)} className="font-bold text-2xl m-2 text-red-700">✕</button>
               </div>
 
               <TransactionForm
