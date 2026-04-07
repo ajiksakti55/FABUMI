@@ -26,6 +26,8 @@ import DailyExpenseChart from "./components/DailyExpenseChart";
 import TransactionTable from "./components/TransactionTable";
 import FilterSelect from "./components/FilterSelect";
 
+import TransactionForm from "../transaksi/components/TransactionForm";
+
 ChartJS.register(
   LineElement,
   CategoryScale,
@@ -43,6 +45,8 @@ export default function DashboardPage() {
   const [filter, setFilter] = useState("bulan-ini");
   const [totalIncomeAll, setTotalIncomeAll] = useState(0);
   const [totalExpenseAll, setTotalExpenseAll] = useState(0);
+  const [showModal, setShowModal] = useState(false);
+
   const monthlyBudget = 5000000;
 
   function isIncomeCategory(t) {
@@ -76,11 +80,11 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, []); // ✅ useCallback supaya stabil
+  }, []);
 
   useEffect(() => {
     load();
-  }, [load]); // ✅ Tidak ada warning lagi
+  }, [load]);
 
   function normalizeDate(val) {
     if (!val) return null;
@@ -150,27 +154,28 @@ export default function DashboardPage() {
   });
 
   const balance = totalIncomeAll - totalExpenseAll;
-  const budgetPercent = Math.min(
-    Math.round((totalExpenseFiltered / monthlyBudget) * 100),
-    100
-  );
 
   if (loading) return <p>Loading...</p>;
 
   return (
     <div className="p-6 text-gray-800 space-y-6">
+
       <FilterSelect filter={filter} setFilter={setFilter} />
+
       <SummaryCards
         totalIncomeFiltered={totalIncomeFiltered}
         totalExpenseFiltered={totalExpenseFiltered}
         balance={balance}
       />
+
       <CashflowChart filtered={filtered} formatDate={formatDate} />
       <YearlyLineChart transaksi={transaksi} thisYear={thisYear} />
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <CategoryPieChart categoryExpenseFiltered={categoryExpenseFiltered} />
         <BudgetProgress transaksi={filtered} />
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Top5BarChart
           filtered={filtered}
@@ -183,7 +188,42 @@ export default function DashboardPage() {
           formatDate={formatDate}
         />
       </div>
+
       <TransactionTable filtered={filtered} formatDate={formatDate} />
+
+      {/* FAB */}
+      <button
+        onClick={() => setShowModal(true)}
+        className="fixed bottom-18 right-6 z-50 md:hidden bg-blue-600 text-white w-14 h-14 rounded-full text-3xl shadow-lg flex items-center justify-center"
+      >
+        +
+      </button>
+
+      {/* ✅ FIXED MODAL */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
+          <div className="min-h-screen flex items-start justify-center p-4 pt-10">
+
+            <div className="bg-white w-full max-w-md rounded-xl p-4 shadow-lg">
+
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-lg font-semibold">Tambah Transaksi</h2>
+                <button onClick={() => setShowModal(false)}>✕</button>
+              </div>
+
+              <TransactionForm
+                onSuccess={() => {
+                  setShowModal(false);
+                  load();
+                }}
+              />
+
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
